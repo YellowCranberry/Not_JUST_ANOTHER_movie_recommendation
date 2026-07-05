@@ -33,6 +33,28 @@ img{
     border-radius:10px;
 }
 
+.poster-placeholder{
+    height:300px;
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    border:1px solid #444;
+    border-radius:10px;
+    background:#1c1c1c;
+    color:#bbb;
+    text-align:center;
+    margin-bottom:8px;
+}
+
+.movie-title{
+    height:60px;
+    overflow:hidden;
+    font-weight:bold;
+    text-align:center;
+    margin-top:8px;
+}           
 </style>
 """, unsafe_allow_html=True)
 
@@ -78,7 +100,7 @@ def cosine_similarity(u, v):
     return np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v))
 
 
-def find_recommendations(movie_index, k=10,include_selected=False):
+def find_recommendations(movie_index, k=10, include_selected=False):
 
     movie_vector = vh[:, movie_index]
 
@@ -114,6 +136,36 @@ def search_movie(query):
 
     return None, False
 
+def display_poster(poster_url):
+    """Display poster with a fixed height to keep cards aligned."""
+
+    if pd.isna(poster_url) or str(poster_url).strip() == "":
+        st.markdown(
+            """
+            <div class="poster-placeholder">
+                🎬<br>Poster Unavailable
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        return
+
+    poster_url = str(poster_url).strip()
+
+    st.markdown(
+        f"""
+        <div style="height:300px; display:flex; justify-content:center;">
+            <img src="{poster_url}"
+                 style="
+                    height:300px;
+                    width:100%;
+                    object-fit:cover;
+                    border-radius:10px;
+                 ">
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # -------------------------------------------------
 # UI
@@ -128,7 +180,7 @@ st.write(
 
 query = st.text_input(
     "Search a Movie",
-    placeholder="Example: Interstellar"
+    placeholder="Example: Jumanji"
 )
 
 if st.button("Recommend Movies"):
@@ -156,15 +208,11 @@ if st.button("Recommend Movies"):
         left, right = st.columns([1, 3])
 
         with left:
-
-            st.image(movie["POSTER_URL"], use_container_width=True)
+            display_poster(movie["POSTER_URL"])
 
         with right:
-
             st.markdown(f"## {movie['Title']}")
-
             st.write(f"**Year:** {movie['Year']}")
-
             st.write(f"**Genres:** {movie['Genres']}")
 
         st.divider()
@@ -184,7 +232,11 @@ if st.button("Recommend Movies"):
 
     st.subheader("🍿 Recommended Movies")
 
-    recommendations = find_recommendations(movie_index, k=10,include_selected=not exact_match)
+    recommendations = find_recommendations(
+        movie_index,
+        k=10,
+        include_selected=not exact_match
+    )
 
     cols = st.columns(5)
 
@@ -194,17 +246,19 @@ if st.button("Recommend Movies"):
 
         with cols[idx % 5]:
 
-            st.image(
-                rec["POSTER_URL"],
-                use_container_width=True
-            )
+            display_poster(rec["POSTER_URL"])
 
             st.markdown(
-                f"**{rec['Title']} ({rec['Year']})**"
+                f"""
+                <div class="movie-title">
+                    {rec['Title']} ({rec['Year']})
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
 
             st.caption(rec["Genres"])
 
             st.progress(float(score))
 
-            st.write(f"**Match:** {score*100:.1f}%")
+            st.write(f"**Match:** {score * 100:.1f}%")
