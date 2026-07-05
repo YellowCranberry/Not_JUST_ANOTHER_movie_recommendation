@@ -78,7 +78,7 @@ def cosine_similarity(u, v):
     return np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v))
 
 
-def find_recommendations(movie_index, k=10):
+def find_recommendations(movie_index, k=10,include_selected=False):
 
     movie_vector = vh[:, movie_index]
 
@@ -86,7 +86,7 @@ def find_recommendations(movie_index, k=10):
 
     for i in range(vh.shape[1]):
 
-        if i == movie_index:
+        if not include_selected and i == movie_index:
             continue
 
         sim = cosine_similarity(movie_vector, vh[:, i])
@@ -184,7 +184,7 @@ if st.button("Recommend Movies"):
 
     st.subheader("🍿 Recommended Movies")
 
-    recommendations = find_recommendations(movie_index, k=10)
+    recommendations = find_recommendations(movie_index, k=10,include_selected=not exact_match)
 
     cols = st.columns(5)
 
